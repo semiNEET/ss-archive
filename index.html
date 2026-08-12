@@ -9,6 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             background-color: #f8f6f2;
             color: #2c2c2c;
@@ -179,7 +183,7 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             font-family: inherit;
-            font-size: 15px;
+            font-size: 16px; /* スマホで自動ズームしない16px */
             box-sizing: border-box;
         }
 
@@ -197,7 +201,7 @@
             background-color: #4a5568;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 15px;
@@ -212,7 +216,7 @@
             background-color: #e2e8f0;
             color: #4a5568;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 15px;
@@ -228,12 +232,13 @@
         .filter-btn {
             background-color: #e2e8f0;
             border: none;
-            padding: 6px 14px;
-            margin: 0 4px 8px;
+            padding: 8px 16px;
+            margin: 0 3px 8px;
             border-radius: 20px;
             cursor: pointer;
             font-size: 13px;
             color: #4a5568;
+            transition: all 0.2s;
         }
 
         .filter-btn.active {
@@ -245,8 +250,8 @@
         .sub-tab-container {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin: 20px 0 25px;
+            gap: 10px;
+            margin: 20px 0 15px;
             border-bottom: 2px solid #e0dcd5;
             padding-bottom: 10px;
         }
@@ -254,10 +259,10 @@
         .sub-tab-btn {
             background: none;
             border: none;
-            font-size: 16px;
+            font-size: 15px;
             color: #718096;
             cursor: pointer;
-            padding: 5px 15px;
+            padding: 6px 12px;
             font-weight: bold;
             transition: all 0.2s;
         }
@@ -265,6 +270,35 @@
         .sub-tab-btn.active {
             color: #2c2c2c;
             border-bottom: 3px solid #4a5568;
+        }
+
+        /* キャラクター絞り込みフィルター */
+        .char-filter-container {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 8px;
+            background-color: #fffaf0;
+            border-radius: 6px;
+            border: 1px solid #feebc8;
+        }
+
+        .char-filter-btn {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e0;
+            padding: 4px 12px;
+            margin: 2px 3px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+
+        .char-filter-btn.active {
+            background-color: #d69e2e;
+            color: white;
+            border-color: #d69e2e;
+            font-weight: bold;
         }
 
         /* 管理者パネル内の陣リスト管理 */
@@ -294,47 +328,69 @@
         .story-card {
             background-color: #ffffff;
             border: 1px solid #e0dcd5;
-            padding: 25px;
-            margin-bottom: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
             border-radius: 6px;
         }
 
         .story-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
             border-bottom: 1px dashed #e0dcd5;
             padding-bottom: 10px;
         }
 
-        .story-header-right {
+        .story-header-main {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
         }
 
         .story-card-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             margin: 0;
+            line-height: 1.4;
+        }
+
+        .story-header-sub {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .story-header-badges {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .tag-badge {
             background-color: #edf2f7;
             color: #4a5568;
-            font-size: 12px;
-            padding: 3px 10px;
-            border-radius: 12px;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
         }
 
         .char-badge {
             background-color: #feebc8;
             color: #744210;
-            font-size: 12px;
-            padding: 3px 10px;
-            border-radius: 12px;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
             font-weight: bold;
+        }
+
+        .story-actions {
+            display: flex;
+            gap: 6px;
         }
 
         .action-btn {
@@ -342,7 +398,7 @@
             border: 1px solid #e2e8f0;
             color: #718096;
             font-size: 12px;
-            padding: 2px 8px;
+            padding: 3px 8px;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
@@ -360,10 +416,68 @@
             border-color: #e53e3e;
         }
 
-        .story-card-body p {
+        /* 本文表示切り替え（開閉） */
+        .story-body {
+            margin-top: 15px;
+        }
+
+        .story-body p {
             margin: 0 0 1em;
             text-indent: 1em;
             font-size: 15px;
+            word-break: break-word;
+        }
+
+        .toggle-body-btn {
+            width: 100%;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            color: #4a5568;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 5px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .toggle-body-btn:hover {
+            background-color: #edf2f7;
+        }
+
+        /* スマホ向けレスポンシブスタイル */
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px 80px;
+                line-height: 1.9;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .form-container {
+                padding: 18px 15px;
+            }
+
+            .story-card {
+                padding: 16px;
+            }
+
+            .story-card-title {
+                font-size: 17px;
+            }
+
+            .nav-btn {
+                padding: 6px 14px;
+                font-size: 13px;
+            }
+
+            .sub-tab-btn {
+                font-size: 14px;
+                padding: 5px 8px;
+            }
         }
     </style>
 </head>
@@ -394,7 +508,7 @@
         </div>
     </div>
 
-    <!-- ★管理者限定パネル：陣（タグ）の追加 ＆ キャラクタ設定 ＆ 編集・削除管理 -->
+    <!-- 管理者限定パネル：陣の追加 ＆ 管理 -->
     <div class="form-container admin-panel" id="adminPanel">
         <h2>👑 【管理者用】陣（タグ）の管理</h2>
         
@@ -427,7 +541,7 @@
     <div id="readSection" class="page-section active">
         <!-- 陣選択ボタン -->
         <div class="filter-container" id="filterContainer">
-            <p style="font-size: 13px; color: #718096;">見たい「陣」のボタンを押してください（要パスワード）</p>
+            <p style="font-size: 13px; color: #718096; margin-bottom: 10px;">見たい「陣」のボタンを押してください（要パスワード）</p>
             <div id="tagButtons"></div>
         </div>
 
@@ -436,6 +550,12 @@
             <div class="sub-tab-container">
                 <button class="sub-tab-btn active" id="tabSS" onclick="switchSubTab('SS')">📖 SS作品</button>
                 <button class="sub-tab-btn" id="tabMemo" onclick="switchSubTab('細かすぎる情報')">💡 細かすぎる情報</button>
+            </div>
+
+            <!-- キャラクター絞り込みボタン表示エリア（細かすぎる情報タブ選択時のみ表示） -->
+            <div id="charFilterArea" class="char-filter-container" style="display: none;">
+                <span style="font-size: 11px; color: #744210; display: block; margin-bottom: 4px;">👤 キャラで絞り込み</span>
+                <div id="charFilterButtons"></div>
             </div>
         </div>
 
@@ -469,7 +589,7 @@
                     <select id="tagInput" onchange="updateFormCharacterOptions()" required></select>
                 </div>
 
-                <!-- ★「細かすぎる情報」を選択したときだけ現れるキャラ選択項目 -->
+                <!-- 「細かすぎる情報」を選択したときだけ現れるキャラ選択項目 -->
                 <div class="input-group" id="characterGroup" style="display: none;">
                     <label>対象キャラクター</label>
                     <select id="characterInput"></select>
@@ -505,6 +625,7 @@
 
         let currentFilter = '';
         let currentSubTab = 'SS'; // 初期値はSS
+        let currentCharFilter = 'ALL'; // 細かすぎる情報のキャラ絞り込み（ALLは全員）
         let currentStories = [];
         let allTags = [];
         let authenticatedTags = [];
@@ -573,7 +694,7 @@
                 tagInput.appendChild(opt);
             });
 
-            updateFormCharacterOptions(); // キャラの選択肢も更新
+            updateFormCharacterOptions();
 
             // 3. 管理者パネル内の陣リスト更新
             const adminTagList = document.getElementById('adminTagList');
@@ -599,7 +720,7 @@
             }
         }
 
-        // 投稿フォームで「陣」が選ばれたら、その陣のキャラクターリストをセット
+        // 投稿フォームの陣に応じたキャラ選択肢セット
         function updateFormCharacterOptions() {
             const selectedTagName = document.getElementById('tagInput').value;
             const tagObj = allTags.find(t => t.name === selectedTagName);
@@ -607,7 +728,6 @@
             charSelect.innerHTML = '';
 
             if (tagObj && tagObj.characters) {
-                // カンマ区切りの文字列を分解
                 const charList = tagObj.characters.split(',').map(s => s.trim()).filter(s => s);
                 charList.forEach(charName => {
                     const opt = document.createElement('option');
@@ -623,7 +743,7 @@
             }
         }
 
-        // 投稿フォームのタイプ切り替え処理（「細かすぎる情報」を選んだらキャラ選択を表示）
+        // 投稿フォームのタイプ切り替え処理
         function togglePostTypeFields() {
             const type = document.getElementById('typeInput').value;
             const charGroup = document.getElementById('characterGroup');
@@ -634,9 +754,10 @@
             }
         }
 
-        // ★閲覧画面で「SS」⇄「細かすぎる情報」のサブタブを切替
+        // 閲覧画面で「SS」⇄「細かすぎる情報」のサブタブを切替
         function switchSubTab(subTabName) {
             currentSubTab = subTabName;
+            currentCharFilter = 'ALL'; // キャラの絞り込みリセット
             document.getElementById('tabSS').className = `sub-tab-btn ${subTabName === 'SS' ? 'active' : ''}`;
             document.getElementById('tabMemo').className = `sub-tab-btn ${subTabName === '細かすぎる情報' ? 'active' : ''}`;
             
@@ -645,7 +766,56 @@
             }
         }
 
-        // 管理者機能：陣の修正（名前、閲覧PW、キャラ名リスト）
+        // キャラ絞り込みボタンの生成・表示更新
+        function renderCharFilterButtons(tagName) {
+            const charFilterArea = document.getElementById('charFilterArea');
+            const charFilterButtons = document.getElementById('charFilterButtons');
+
+            if (currentSubTab !== '細かすぎる情報') {
+                charFilterArea.style.display = 'none';
+                return;
+            }
+
+            const tagObj = allTags.find(t => t.name === tagName);
+            if (!tagObj || !tagObj.characters) {
+                charFilterArea.style.display = 'none';
+                return;
+            }
+
+            const charList = tagObj.characters.split(',').map(s => s.trim()).filter(s => s);
+            if (charList.length === 0) {
+                charFilterArea.style.display = 'none';
+                return;
+            }
+
+            charFilterArea.style.display = 'block';
+            charFilterButtons.innerHTML = '';
+
+            // 「すべて」ボタン
+            const allBtn = document.createElement('button');
+            allBtn.className = `char-filter-btn ${currentCharFilter === 'ALL' ? 'active' : ''}`;
+            allBtn.innerText = 'すべて';
+            allBtn.onclick = () => selectCharFilter('ALL');
+            charFilterButtons.appendChild(allBtn);
+
+            // 各キャラボタン
+            charList.forEach(charName => {
+                const btn = document.createElement('button');
+                btn.className = `char-filter-btn ${currentCharFilter === charName ? 'active' : ''}`;
+                btn.innerText = charName;
+                btn.onclick = () => selectCharFilter(charName);
+                charFilterButtons.appendChild(btn);
+            });
+        }
+
+        // キャラ絞り込み実行
+        function selectCharFilter(charName) {
+            currentCharFilter = charName;
+            renderCharFilterButtons(currentFilter);
+            renderStoryCards();
+        }
+
+        // 管理者機能：陣の修正
         async function editTag(id, oldName, oldPass, oldChars) {
             const newName = prompt('新しい「陣の名前」を入力してください：', oldName);
             if (newName === null || !newName.trim()) return;
@@ -786,17 +956,17 @@
             }
         }
 
-        // 作品を取得して表示（SSか細かすぎる情報かで絞り込み）
+        // 作品データ取得
         async function fetchStories(tagName) {
             currentFilter = tagName;
             fetchTags();
 
-            document.getElementById('subTabArea').style.display = 'block'; // サブタブを表示
+            document.getElementById('subTabArea').style.display = 'block';
+            renderCharFilterButtons(tagName);
 
             const storyListDiv = document.getElementById('storyList');
             storyListDiv.innerHTML = '<p style="text-align:center; color:#999;">読み込み中...</p>';
 
-            // 陣と投稿タイプ（SS / 細かすぎる情報）で絞り込み
             const { data: stories, error } = await db.from('stories')
                 .select('*')
                 .eq('tag', tagName)
@@ -809,33 +979,78 @@
                 return;
             }
 
-            currentStories = stories;
+            currentStories = stories || [];
+            renderStoryCards();
+        }
 
-            if (stories.length === 0) {
-                storyListDiv.innerHTML = `<p style="text-align:center; color:#999;">「${tagName}」の${currentSubTab}はまだ投稿されていません。</p>`;
+        // カードの描画処理（キャラ絞り込み＆開閉対応）
+        function renderStoryCards() {
+            const storyListDiv = document.getElementById('storyList');
+            storyListDiv.innerHTML = '';
+
+            // キャラ絞り込み適用
+            let filtered = currentStories;
+            if (currentSubTab === '細かすぎる情報' && currentCharFilter !== 'ALL') {
+                filtered = currentStories.filter(s => s.character_name === currentCharFilter);
+            }
+
+            if (filtered.length === 0) {
+                storyListDiv.innerHTML = `<p style="text-align:center; color:#999;">該当する投稿はありません。</p>`;
                 return;
             }
 
-            storyListDiv.innerHTML = '';
-            stories.forEach(story => {
+            filtered.forEach(story => {
+                const isSS = (story.type === 'SS');
                 const card = document.createElement('div');
                 card.className = 'story-card';
+
                 card.innerHTML = `
                     <div class="story-header">
-                        <h3 class="story-card-title">${story.title}</h3>
-                        <div class="story-header-right">
-                            ${story.character_name ? `<span class="char-badge">👤 ${story.character_name}</span>` : ''}
-                            <span class="tag-badge"># ${story.tag}</span>
-                            <button class="action-btn edit" onclick="startEdit(${story.id})">編集</button>
-                            <button class="action-btn delete" onclick="deleteStory(${story.id})">削除</button>
+                        <div class="story-header-main">
+                            <h3 class="story-card-title">${story.title}</h3>
+                        </div>
+                        <div class="story-header-sub">
+                            <div class="story-header-badges">
+                                ${story.character_name ? `<span class="char-badge">👤 ${story.character_name}</span>` : ''}
+                                <span class="tag-badge"># ${story.tag}</span>
+                            </div>
+                            <div class="story-actions">
+                                <button class="action-btn edit" onclick="startEdit(${story.id})">編集</button>
+                                <button class="action-btn delete" onclick="deleteStory(${story.id})">削除</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="story-body">
-                        <p>${story.body.replace(/\n/g, '</p><p>')}</p>
-                    </div>
+                    ${isSS ? `
+                        <!-- SSは最初隠して「読む」ボタンを表示 -->
+                        <div class="story-body" id="body-${story.id}" style="display: none;">
+                            <p>${story.body.replace(/\n/g, '</p><p>')}</p>
+                        </div>
+                        <button class="toggle-body-btn" id="toggle-btn-${story.id}" onclick="toggleBody(${story.id})">📖 本文を読む</button>
+                    ` : `
+                        <!-- 細かすぎる情報は最初から表示 -->
+                        <div class="story-body">
+                            <p>${story.body.replace(/\n/g, '</p><p>')}</p>
+                        </div>
+                    `}
                 `;
                 storyListDiv.appendChild(card);
             });
+        }
+
+        // SS本文の開閉トグル
+        function toggleBody(storyId) {
+            const bodyDiv = document.getElementById(`body-${storyId}`);
+            const btn = document.getElementById(`toggle-btn-${storyId}`);
+
+            if (bodyDiv.style.display === 'none') {
+                bodyDiv.style.display = 'block';
+                btn.innerText = '▲ 閉じる';
+                btn.style.backgroundColor = '#edf2f7';
+            } else {
+                bodyDiv.style.display = 'none';
+                btn.innerText = '📖 本文を読む';
+                btn.style.backgroundColor = '#f7fafc';
+            }
         }
 
         // 編集開始
@@ -958,7 +1173,7 @@
                 alert('処理に失敗しました: ' + error.message);
             } else {
                 resetForm();
-                currentSubTab = type; // 投稿した方のサブタブに切り替える
+                currentSubTab = type;
                 fetchStories(tag);
                 switchView('read');
             }
