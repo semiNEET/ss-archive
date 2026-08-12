@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SS Archive</title>
+    
+    <!-- Supabaseライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background-color: #f8f6f2;
+            color: #2c2c2c;
+            font-family: "Georgia", "Yu Mincho", "游明朝", serif;
+            line-height: 2.1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px 100px;
+        }
+
+        /* ロック画面モーダル */
+        #passwordModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f8f6f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .password-box {
+            background: #ffffff;
+            border: 1px solid #e0dcd5;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 320px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .password-box h3 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #4a5568;
+        }
+
+        .password-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* ヘッダーとナビゲーション */
+        .header-container {
+            border-bottom: 1px solid #e0dcd5;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0 0 15px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .admin-btn {
+            background: none;
+            border: 1px solid #cbd5e0;
+            color: #718096;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .admin-btn.active {
+            background-color: #d69e2e;
+            color: white;
+            border-color: #d69e2e;
+            font-weight: bold;
+        }
+
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background-color: #ffffff;
+            border: 1px solid #e0dcd5;
+            color: #4a5568;
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            background-color: #4a5568;
+            color: white;
+            border-color: #4a5568;
+        }
+
+        /* 画面切替エリア */
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        /* フォーム */
+        .form-container {
+            background-color: #ffffff;
+            border: 1px solid #e0dcd5;
+            padding: 25px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+
+        .form-container.editing {
+            border-color: #4a5568;
+            box-shadow: 0 0 8px rgba(74, 85, 104, 0.2);
+        }
+
+        .form-container h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .admin-panel {
+            background-color: #fffaf0;
+            border: 1px solid #feebc8;
+            display: none;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 180px;
+            resize: vertical;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .submit-btn {
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            flex: 1;
+        }
+
+        .submit-btn:hover {
+            background-color: #2d3748;
+        }
+
+        .cancel-btn {
+            background-color: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            display: none;
+        }
+
+        /* 検索タグ・サブタブボタン */
+        .filter-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .filter-btn {
+            background-color: #e2e8f0;
+            border: none;
+            padding: 6px 14px;
+            margin: 0 4px 8px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .filter-btn.active {
+            background-color: #4a5568;
+            color: white;
+        }
+
+        /* SS ⇄ 細かすぎる情報 タブ切替ボタン */
+        .sub-tab-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0 25px;
+            border-bottom: 2px solid #e0dcd5;
+            padding-bottom: 10px;
+        }
+
+        .sub-tab-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #718096;
+            cursor: pointer;
+            padding: 5px 15px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .sub-tab-btn.active {
+            color: #2c2c2c;
+            border-bottom: 3px solid #4a5568;
+        }
+
+        /* 管理者パネル内の陣リスト管理 */
+        .admin-tag-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #feebc8;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .admin-tag-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-tag-pass {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        /* 作品表示カード */
+        .story-card {
+            background-color: #ffffff;
+            border: 1px solid #e0dcd5;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 6px;
+        }
+
+        .story-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #e0dcd5;
+            padding-bottom: 10px;
+        }
+
+        .story-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .story-card-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .tag-badge {
+            background-color: #edf2f7;
+            color: #4a5568;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+
+        .char-badge {
+            background-color: #feebc8;
+            color: #744210;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.edit:hover {
+            background-color: #4a5568;
+            color: white;
+            border-color: #4a5568;
+        }
+
+        .action-btn.delete:hover {
+            background-color: #e53e3e;
+            color: white;
+            border-color: #e53e3e;
+        }
+
+        .story-card-body p {
+            margin: 0 0 1em;
+            text-indent: 1em;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 合言葉入力画面 -->
+    <div id="passwordModal">
+        <div class="password-box">
+            <h3>合言葉を入力</h3>
+            <p style="font-size: 12px; color: #718096; margin: 0;">閲覧・投稿には合言葉が必要です</p>
+            <input type="text" id="passwordInput" placeholder="合言葉を入力" onkeydown="if(event.key==='Enter') checkPassword()">
+            <button class="submit-btn" onclick="checkPassword()">入室する</button>
+            <p id="passwordError" style="color: #e53e3e; font-size: 12px; margin-top: 10px; display: none;">合言葉が違います</p>
+        </div>
+    </div>
+
+    <!-- ヘッダー＆ナビゲーション -->
+    <div class="header-container">
+        <div class="header-top">
+            <span style="width: 70px;"></span>
+            <h1>SS Archive</h1>
+            <button class="admin-btn" id="adminBtn" onclick="toggleAdmin()">🔑 管理者</button>
+        </div>
+        
+        <div class="nav-menu">
+            <button class="nav-btn active" id="btnReadView" onclick="switchView('read')">📖 閲覧・検索</button>
+            <button class="nav-btn" id="btnPostView" onclick="switchView('post')">✍️ 新規投稿</button>
+        </div>
+    </div>
+
+    <!-- ★管理者限定パネル：陣（タグ）の追加 ＆ キャラクタ設定 ＆ 編集・削除管理 -->
+    <div class="form-container admin-panel" id="adminPanel">
+        <h2>👑 【管理者用】陣（タグ）の管理</h2>
+        
+        <!-- 新規追加 -->
+        <form id="tagForm" style="margin-bottom: 25px; border-bottom: 1px dashed #feebc8; padding-bottom: 20px;">
+            <h3 style="font-size: 14px; margin: 0 0 10px; color: #744210;">新規陣の追加</h3>
+            <div class="input-group">
+                <label>陣（タグ）の名前</label>
+                <input type="text" id="newTagName" placeholder="例: 陣A, 紅蓮陣" required>
+            </div>
+            <div class="input-group">
+                <label>閲覧用パスワード（日本語入力OK）</label>
+                <input type="text" id="newTagPass" placeholder="例: あか, 桜" required>
+            </div>
+            <div class="input-group">
+                <label>所属キャラクター名（カンマ区切りで複数入力。例: キャラA, キャラB, 陣全体）</label>
+                <input type="text" id="newTagChars" placeholder="例: キャラA, キャラB, 陣全体">
+            </div>
+            <button type="submit" class="submit-btn" style="background-color: #d69e2e;">陣を追加する</button>
+        </form>
+
+        <!-- 登録済みの陣一覧 -->
+        <div>
+            <h3 style="font-size: 14px; margin: 0 0 10px; color: #744210;">登録済みの陣一覧（編集・削除）</h3>
+            <div id="adminTagList">読み込み中...</div>
+        </div>
+    </div>
+
+    <!-- ==================== ① 閲覧・検索画面 ==================== -->
+    <div id="readSection" class="page-section active">
+        <!-- 陣選択ボタン -->
+        <div class="filter-container" id="filterContainer">
+            <p style="font-size: 13px; color: #718096;">見たい「陣」のボタンを押してください（要パスワード）</p>
+            <div id="tagButtons"></div>
+        </div>
+
+        <!-- SS ⇄ 細かすぎる情報 切替タブ（陣選択後に表示） -->
+        <div id="subTabArea" style="display: none;">
+            <div class="sub-tab-container">
+                <button class="sub-tab-btn active" id="tabSS" onclick="switchSubTab('SS')">📖 SS作品</button>
+                <button class="sub-tab-btn" id="tabMemo" onclick="switchSubTab('細かすぎる情報')">💡 細かすぎる情報</button>
+            </div>
+        </div>
+
+        <!-- 作品表示エリア -->
+        <div id="storyList"><p style="text-align:center; color:#999;">陣を選択してください</p></div>
+    </div>
+
+    <!-- ==================== ② 投稿・編集画面 ==================== -->
+    <div id="postSection" class="page-section">
+        <div class="form-container" id="formContainer">
+            <h2 id="formTitle">新規投稿</h2>
+            <form id="storyForm">
+                <input type="hidden" id="editId" value="">
+
+                <!-- 投稿タイプの選択 -->
+                <div class="input-group">
+                    <label>投稿の種類</label>
+                    <select id="typeInput" onchange="togglePostTypeFields()">
+                        <option value="SS">SS（小説作品）</option>
+                        <option value="細かすぎる情報">細かすぎる情報（キャラ設定・メモ）</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>タイトル</label>
+                    <input type="text" id="titleInput" placeholder="タイトルや見出しを入力" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>陣 / 分類タグ</label>
+                    <select id="tagInput" onchange="updateFormCharacterOptions()" required></select>
+                </div>
+
+                <!-- ★「細かすぎる情報」を選択したときだけ現れるキャラ選択項目 -->
+                <div class="input-group" id="characterGroup" style="display: none;">
+                    <label>対象キャラクター</label>
+                    <select id="characterInput"></select>
+                </div>
+
+                <div class="input-group">
+                    <label>本文</label>
+                    <textarea id="bodyInput" placeholder="ここに本文を入力します..." required></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>投稿パスワード（編集・削除用 / 日本語OK）</label>
+                    <input type="text" id="passInput" placeholder="後から修正・削除するための合い言葉（例: ひみつ）" required>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="submit-btn" id="submitBtn">投稿する</button>
+                    <button type="button" class="cancel-btn" id="cancelBtn" onclick="resetForm()">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const SECRET_PASSWORD = 'NEET';
+        const ADMIN_PASSWORD = 'admin';
+
+        const SUPABASE_URL = 'https://vorrmzcxejhjununfldh.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_ylQ7fHSPfAT67GiSUyQacA_I44opJMn';
+
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentFilter = '';
+        let currentSubTab = 'SS'; // 初期値はSS
+        let currentStories = [];
+        let allTags = [];
+        let authenticatedTags = [];
+        let isAdmin = false;
+
+        // 合言葉チェック
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value.trim();
+            const errorMsg = document.getElementById('passwordError');
+
+            if (input === SECRET_PASSWORD) {
+                sessionStorage.setItem('ss_authenticated', 'true');
+                document.getElementById('passwordModal').style.display = 'none';
+                errorMsg.style.display = 'none';
+                initApp();
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        async function initApp() {
+            await fetchTags();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('ss_authenticated') === 'true') {
+                document.getElementById('passwordModal').style.display = 'none';
+                initApp();
+            }
+        });
+
+        // データベースから陣（タグ）を取得して更新
+        async function fetchTags() {
+            const { data, error } = await db.from('tags').select('*').order('id', { ascending: true });
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            allTags = data || [];
+
+            // 1. 閲覧画面のフィルターボタン更新
+            const tagButtonsDiv = document.getElementById('tagButtons');
+            tagButtonsDiv.innerHTML = '';
+
+            if (allTags.length === 0) {
+                tagButtonsDiv.innerHTML = '<p style="font-size:12px; color:#e53e3e;">※陣が登録されていません。管理者メニューから追加してください。</p>';
+            } else {
+                allTags.forEach(tag => {
+                    const isAuth = authenticatedTags.includes(tag.name) || isAdmin;
+                    const btn = document.createElement('button');
+                    btn.className = `filter-btn ${currentFilter === tag.name ? 'active' : ''}`;
+                    btn.innerText = `${isAuth ? '🔓' : '🔒'} ${tag.name}`;
+                    btn.onclick = () => selectTagFilter(tag);
+                    tagButtonsDiv.appendChild(btn);
+                });
+            }
+
+            // 2. 投稿フォームの陣選択肢更新
+            const tagInput = document.getElementById('tagInput');
+            tagInput.innerHTML = '';
+            allTags.forEach(tag => {
+                const opt = document.createElement('option');
+                opt.value = tag.name;
+                opt.innerText = tag.name;
+                tagInput.appendChild(opt);
+            });
+
+            updateFormCharacterOptions(); // キャラの選択肢も更新
+
+            // 3. 管理者パネル内の陣リスト更新
+            const adminTagList = document.getElementById('adminTagList');
+            if (allTags.length === 0) {
+                adminTagList.innerHTML = '<p style="font-size:12px; color:#999;">登録されている陣はありません。</p>';
+            } else {
+                adminTagList.innerHTML = '';
+                allTags.forEach(tag => {
+                    const item = document.createElement('div');
+                    item.className = 'admin-tag-item';
+                    item.innerHTML = `
+                        <div class="admin-tag-info">
+                            <strong>${tag.name} <span class="admin-tag-pass">(PW: ${tag.pass})</span></strong>
+                            <span style="font-size: 11px; color: #718096;">キャラ: ${tag.characters || '未設定'}</span>
+                        </div>
+                        <div>
+                            <button class="action-btn edit" onclick="editTag(${tag.id}, '${tag.name}', '${tag.pass}', '${tag.characters || ''}')">編集</button>
+                            <button class="action-btn delete" onclick="deleteTag(${tag.id}, '${tag.name}')">削除</button>
+                        </div>
+                    `;
+                    adminTagList.appendChild(item);
+                });
+            }
+        }
+
+        // 投稿フォームで「陣」が選ばれたら、その陣のキャラクターリストをセット
+        function updateFormCharacterOptions() {
+            const selectedTagName = document.getElementById('tagInput').value;
+            const tagObj = allTags.find(t => t.name === selectedTagName);
+            const charSelect = document.getElementById('characterInput');
+            charSelect.innerHTML = '';
+
+            if (tagObj && tagObj.characters) {
+                // カンマ区切りの文字列を分解
+                const charList = tagObj.characters.split(',').map(s => s.trim()).filter(s => s);
+                charList.forEach(charName => {
+                    const opt = document.createElement('option');
+                    opt.value = charName;
+                    opt.innerText = charName;
+                    charSelect.appendChild(opt);
+                });
+            } else {
+                const opt = document.createElement('option');
+                opt.value = '陣全体';
+                opt.innerText = '陣全体';
+                charSelect.appendChild(opt);
+            }
+        }
+
+        // 投稿フォームのタイプ切り替え処理（「細かすぎる情報」を選んだらキャラ選択を表示）
+        function togglePostTypeFields() {
+            const type = document.getElementById('typeInput').value;
+            const charGroup = document.getElementById('characterGroup');
+            if (type === '細かすぎる情報') {
+                charGroup.style.display = 'block';
+            } else {
+                charGroup.style.display = 'none';
+            }
+        }
+
+        // ★閲覧画面で「SS」⇄「細かすぎる情報」のサブタブを切替
+        function switchSubTab(subTabName) {
+            currentSubTab = subTabName;
+            document.getElementById('tabSS').className = `sub-tab-btn ${subTabName === 'SS' ? 'active' : ''}`;
+            document.getElementById('tabMemo').className = `sub-tab-btn ${subTabName === '細かすぎる情報' ? 'active' : ''}`;
+            
+            if (currentFilter) {
+                fetchStories(currentFilter);
+            }
+        }
+
+        // 管理者機能：陣の修正（名前、閲覧PW、キャラ名リスト）
+        async function editTag(id, oldName, oldPass, oldChars) {
+            const newName = prompt('新しい「陣の名前」を入力してください：', oldName);
+            if (newName === null || !newName.trim()) return;
+
+            const newPass = prompt(`「${newName}」の「閲覧用パスワード」を入力してください：`, oldPass);
+            if (newPass === null || !newPass.trim()) return;
+
+            const newChars = prompt(`「${newName}」の「所属キャラクター名（カンマ区切り）」を入力してください：`, oldChars);
+            if (newChars === null) return;
+
+            const { error: tagErr } = await db.from('tags').update({ 
+                name: newName.trim(), 
+                pass: newPass.trim(),
+                characters: newChars.trim()
+            }).eq('id', id);
+
+            if (tagErr) {
+                alert('陣の更新に失敗しました: ' + tagErr.message);
+                return;
+            }
+
+            if (oldName !== newName.trim()) {
+                await db.from('stories').update({ tag: newName.trim() }).eq('tag', oldName);
+            }
+
+            alert(`陣「${newName.trim()}」の情報を更新しました！`);
+            fetchTags();
+
+            if (currentFilter === oldName) {
+                fetchStories(newName.trim());
+            }
+        }
+
+        // 管理者機能：陣の削除
+        async function deleteTag(id, tagName) {
+            if (!confirm(`陣「${tagName}」を削除しますか？\n※この陣に投稿されている作品も削除されます。`)) return;
+
+            const { error: tagErr } = await db.from('tags').delete().eq('id', id);
+            if (tagErr) {
+                alert('陣の削除に失敗しました: ' + tagErr.message);
+                return;
+            }
+
+            await db.from('stories').delete().eq('tag', tagName);
+            alert(`陣「${tagName}」と所属する作品を削除しました。`);
+            
+            if (currentFilter === tagName) {
+                currentFilter = '';
+                document.getElementById('subTabArea').style.display = 'none';
+                document.getElementById('storyList').innerHTML = '<p style="text-align:center; color:#999;">陣を選択してください</p>';
+            }
+
+            fetchTags();
+        }
+
+        // 陣選択時の閲覧認証
+        async function selectTagFilter(tag) {
+            if (isAdmin || authenticatedTags.includes(tag.name)) {
+                fetchStories(tag.name);
+                return;
+            }
+
+            const inputPw = prompt(`「${tag.name}」の閲覧パスワードを入力してください：`);
+            if (inputPw === null) return;
+
+            if (inputPw.trim() === tag.pass) {
+                authenticatedTags.push(tag.name);
+                alert(`「${tag.name}」のロックを解除しました。`);
+                fetchTags();
+                fetchStories(tag.name);
+            } else {
+                alert('閲覧パスワードが違います。');
+            }
+        }
+
+        // 管理者モード切り替え
+        function toggleAdmin() {
+            const adminBtn = document.getElementById('adminBtn');
+            const adminPanel = document.getElementById('adminPanel');
+
+            if (isAdmin) {
+                isAdmin = false;
+                adminBtn.innerText = '🔑 管理者';
+                adminBtn.classList.remove('active');
+                adminPanel.classList.remove('active');
+                alert('管理者モードを解除しました。');
+            } else {
+                const inputPw = prompt('管理者パスワードを入力してください：');
+                if (inputPw === ADMIN_PASSWORD) {
+                    isAdmin = true;
+                    adminBtn.innerText = '👑 管理者中';
+                    adminBtn.classList.add('active');
+                    adminPanel.classList.add('active');
+                    alert('管理者モードでログインしました。すべての陣を閲覧・投稿・管理できます。');
+                    fetchTags();
+                } else if (inputPw !== null) {
+                    alert('管理者パスワードが違います。');
+                }
+            }
+        }
+
+        // 新しい陣を追加
+        document.getElementById('tagForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('newTagName').value.trim();
+            const pass = document.getElementById('newTagPass').value.trim();
+            const characters = document.getElementById('newTagChars').value.trim();
+
+            const { error } = await db.from('tags').insert([{ name, pass, characters }]);
+
+            if (error) {
+                alert('陣の追加に失敗しました（既に同じ名前が存在する可能性があります）: ' + error.message);
+            } else {
+                alert(`新しい陣「${name}」を追加しました！`);
+                this.reset();
+                fetchTags();
+            }
+        });
+
+        // 画面切り替え（閲覧 ⇄ 投稿）
+        function switchView(viewName) {
+            const readSec = document.getElementById('readSection');
+            const postSec = document.getElementById('postSection');
+            const btnRead = document.getElementById('btnReadView');
+            const btnPost = document.getElementById('btnPostView');
+
+            if (viewName === 'read') {
+                readSec.classList.add('active');
+                postSec.classList.remove('active');
+                btnRead.classList.add('active');
+                btnPost.classList.remove('active');
+            } else {
+                readSec.classList.remove('active');
+                postSec.classList.add('active');
+                btnRead.classList.remove('active');
+                btnPost.classList.add('active');
+            }
+        }
+
+        // 作品を取得して表示（SSか細かすぎる情報かで絞り込み）
+        async function fetchStories(tagName) {
+            currentFilter = tagName;
+            fetchTags();
+
+            document.getElementById('subTabArea').style.display = 'block'; // サブタブを表示
+
+            const storyListDiv = document.getElementById('storyList');
+            storyListDiv.innerHTML = '<p style="text-align:center; color:#999;">読み込み中...</p>';
+
+            // 陣と投稿タイプ（SS / 細かすぎる情報）で絞り込み
+            const { data: stories, error } = await db.from('stories')
+                .select('*')
+                .eq('tag', tagName)
+                .eq('type', currentSubTab)
+                .order('id', { ascending: false });
+
+            if (error) {
+                console.error(error);
+                storyListDiv.innerHTML = '<p style="text-align:center; color:red;">データの読み込みに失敗しました。</p>';
+                return;
+            }
+
+            currentStories = stories;
+
+            if (stories.length === 0) {
+                storyListDiv.innerHTML = `<p style="text-align:center; color:#999;">「${tagName}」の${currentSubTab}はまだ投稿されていません。</p>`;
+                return;
+            }
+
+            storyListDiv.innerHTML = '';
+            stories.forEach(story => {
+                const card = document.createElement('div');
+                card.className = 'story-card';
+                card.innerHTML = `
+                    <div class="story-header">
+                        <h3 class="story-card-title">${story.title}</h3>
+                        <div class="story-header-right">
+                            ${story.character_name ? `<span class="char-badge">👤 ${story.character_name}</span>` : ''}
+                            <span class="tag-badge"># ${story.tag}</span>
+                            <button class="action-btn edit" onclick="startEdit(${story.id})">編集</button>
+                            <button class="action-btn delete" onclick="deleteStory(${story.id})">削除</button>
+                        </div>
+                    </div>
+                    <div class="story-body">
+                        <p>${story.body.replace(/\n/g, '</p><p>')}</p>
+                    </div>
+                `;
+                storyListDiv.appendChild(card);
+            });
+        }
+
+        // 編集開始
+        function startEdit(id) {
+            const story = currentStories.find(s => s.id === id);
+            if (!story) return;
+
+            if (!isAdmin) {
+                const inputPw = prompt('投稿時に設定した「投稿パスワード」を入力してください：');
+                if (inputPw === null) return;
+                if (inputPw.trim() !== story.pass) {
+                    alert('投稿パスワードが違います。');
+                    return;
+                }
+            }
+
+            document.getElementById('editId').value = story.id;
+            document.getElementById('typeInput').value = story.type || 'SS';
+            togglePostTypeFields();
+
+            document.getElementById('titleInput').value = story.title;
+            document.getElementById('tagInput').value = story.tag;
+            updateFormCharacterOptions();
+
+            if (story.character_name) {
+                document.getElementById('characterInput').value = story.character_name;
+            }
+
+            document.getElementById('bodyInput').value = story.body;
+            document.getElementById('passInput').value = story.pass || '';
+
+            document.getElementById('formTitle').innerText = '投稿を編集する';
+            document.getElementById('submitBtn').innerText = '更新する';
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+            document.getElementById('formContainer').classList.add('editing');
+
+            switchView('post');
+        }
+
+        // 削除処理
+        async function deleteStory(id) {
+            const story = currentStories.find(s => s.id === id);
+            if (!story) return;
+
+            if (!isAdmin) {
+                const inputPw = prompt('投稿時に設定した「投稿パスワード」を入力してください：');
+                if (inputPw === null) return;
+                if (inputPw.trim() !== story.pass) {
+                    alert('投稿パスワードが違います。');
+                    return;
+                }
+            }
+
+            if (!confirm('本当に削除しますか？')) return;
+
+            const { error } = await db.from('stories').delete().eq('id', id);
+
+            if (error) {
+                alert('削除に失敗しました: ' + error.message);
+            } else {
+                if (document.getElementById('editId').value == id) {
+                    resetForm();
+                }
+                fetchStories(currentFilter);
+            }
+        }
+
+        // フォームリセット
+        function resetForm() {
+            document.getElementById('storyForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('formTitle').innerText = '新規投稿';
+            document.getElementById('submitBtn').innerText = '投稿する';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('formContainer').classList.remove('editing');
+            togglePostTypeFields();
+        }
+
+        // 投稿・更新処理
+        document.getElementById('storyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const type = document.getElementById('typeInput').value;
+            const targetTag = document.getElementById('tagInput').value;
+            const targetTagObj = allTags.find(t => t.name === targetTag);
+
+            if (!isAdmin && targetTagObj && !authenticatedTags.includes(targetTag)) {
+                const inputPw = prompt(`「${targetTag}」へ投稿するには、陣の閲覧パスワードを入力してください：`);
+                if (inputPw === null || inputPw.trim() !== targetTagObj.pass) {
+                    alert('陣の閲覧パスワードが違うため、投稿できません。');
+                    return;
+                } else {
+                    authenticatedTags.push(targetTag);
+                }
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const editId = document.getElementById('editId').value;
+
+            submitBtn.innerText = editId ? '更新中...' : '送信中...';
+            submitBtn.disabled = true;
+
+            const title = document.getElementById('titleInput').value.trim();
+            const tag = targetTag;
+            const character_name = (type === '細かすぎる情報') ? document.getElementById('characterInput').value : null;
+            const body = document.getElementById('bodyInput').value;
+            const pass = document.getElementById('passInput').value.trim();
+
+            let error = null;
+
+            if (editId) {
+                const res = await db.from('stories').update({ type, title, tag, character_name, body, pass }).eq('id', editId);
+                error = res.error;
+            } else {
+                const res = await db.from('stories').insert([{ type, title, tag, character_name, body, pass }]);
+                error = res.error;
+            }
+
+            if (error) {
+                alert('処理に失敗しました: ' + error.message);
+            } else {
+                resetForm();
+                currentSubTab = type; // 投稿した方のサブタブに切り替える
+                fetchStories(tag);
+                switchView('read');
+            }
+
+            submitBtn.disabled = false;
+        });
+    </script>
+</body>
+</html>
