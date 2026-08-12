@@ -614,10 +614,10 @@
         </div>
     </div>
 
-    <script>
-        // パスワードを直書きせず、SHA-256ハッシュ値で保持（暗号化）
-        const SECRET_HASH = '9f0b14c1d2e23e20e1762c262e3d30b91e9b251a37c35e3590fa4f7380928e18'; // 「NEET」のハッシュ
-        const ADMIN_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918';  // 「admin」のハッシュ
+<script>
+        // ソースコード検索で「NEET」「admin」が直で見えないよう難読化（Base64）
+        const SECRET_KEY = 'TkVFVA=='; // NEET
+        const ADMIN_KEY = 'YWRtaW4=';   // admin
 
         const SUPABASE_URL = 'https://vorrmzcxejhjununfldh.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_ylQ7fHSPfAT67GiSUyQacA_I44opJMn';
@@ -633,21 +633,12 @@
         let authenticatedTags = [];
         let isAdmin = false;
 
-        // 文字列をSHA-256でハッシュ化（暗号化）する関数
-        async function sha256(text) {
-            const uint8 = new TextEncoder().encode(text);
-            const digest = await crypto.subtle.digest('SHA-256', uint8);
-            return Array.from(new Uint8Array(digest)).map(v => v.toString(16).padStart(2, '0')).join('');
-        }
-
         // 合言葉チェック
-        async function checkPassword() {
+        function checkPassword() {
             const input = document.getElementById('passwordInput').value.trim();
             const errorMsg = document.getElementById('passwordError');
-            
-            const inputHash = await sha256(input);
 
-            if (inputHash === SECRET_HASH) {
+            if (btoa(input) === SECRET_KEY) {
                 sessionStorage.setItem('ss_authenticated', 'true');
                 document.getElementById('passwordModal').style.display = 'none';
                 errorMsg.style.display = 'none';
@@ -903,7 +894,7 @@
         }
 
         // 管理者モード切り替え
-        async function toggleAdmin() {
+        function toggleAdmin() {
             const adminBtn = document.getElementById('adminBtn');
             const adminPanel = document.getElementById('adminPanel');
 
@@ -917,9 +908,7 @@
                 const inputPw = prompt('管理者パスワードを入力してください：');
                 if (inputPw === null) return;
 
-                const inputHash = await sha256(inputPw.trim());
-
-                if (inputHash === ADMIN_HASH) {
+                if (btoa(inputPw.trim()) === ADMIN_KEY) {
                     isAdmin = true;
                     adminBtn.innerText = '👑 管理者中';
                     adminBtn.classList.add('active');
