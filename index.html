@@ -273,6 +273,35 @@
             border-bottom: 3px solid #4a5568;
         }
 
+        /* 文字サイズ変更コントローラー */
+        .font-size-control {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .font-size-btn {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e0;
+            color: #4a5568;
+            padding: 2px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .font-size-btn.active {
+            background-color: #4a5568;
+            color: #ffffff;
+            border-color: #4a5568;
+            font-weight: bold;
+        }
+
         /* キャラクター絞り込みフィルター */
         .char-filter-container {
             text-align: center;
@@ -417,7 +446,7 @@
             border-color: #e53e3e;
         }
 
-        /* 本文表示切り替え（開閉） */
+        /* 本文表示スタイル（文字サイズ制御対応） */
         .story-body {
             margin-top: 15px;
         }
@@ -425,8 +454,23 @@
         .story-body p {
             margin: 0 0 1em;
             text-indent: 1em;
-            font-size: 15px;
             word-break: break-word;
+        }
+
+        /* 文字サイズバリエーション */
+        .size-small .story-body p {
+            font-size: 13.5px;
+            line-height: 1.75;
+        }
+
+        .size-medium .story-body p {
+            font-size: 15px;
+            line-height: 1.85;
+        }
+
+        .size-large .story-body p {
+            font-size: 17px;
+            line-height: 1.95;
         }
 
         .toggle-body-btn {
@@ -451,7 +495,6 @@
         @media (max-width: 600px) {
             body {
                 padding: 20px 12px 80px;
-                line-height: 1.7;
             }
 
             h1 {
@@ -478,6 +521,18 @@
             .sub-tab-btn {
                 font-size: 14px;
                 padding: 5px 8px;
+            }
+
+            .size-small .story-body p {
+                font-size: 13px;
+            }
+
+            .size-medium .story-body p {
+                font-size: 14.5px;
+            }
+
+            .size-large .story-body p {
+                font-size: 16px;
             }
         }
     </style>
@@ -553,6 +608,14 @@
                 <button class="sub-tab-btn" id="tabMemo" onclick="switchSubTab('細かすぎる情報')">💡 細かすぎる情報</button>
             </div>
 
+            <!-- 文字サイズ選択コントロール -->
+            <div class="font-size-control">
+                <span>文字サイズ:</span>
+                <button class="font-size-btn active" id="btnFontSmall" onclick="setFontSize('small')">小</button>
+                <button class="font-size-btn" id="btnFontMedium" onclick="setFontSize('medium')">中</button>
+                <button class="font-size-btn" id="btnFontLarge" onclick="setFontSize('large')">大</button>
+            </div>
+
             <!-- キャラクター絞り込みボタン表示エリア（細かすぎる情報タブ選択時のみ表示） -->
             <div id="charFilterArea" class="char-filter-container" style="display: none;">
                 <span style="font-size: 11px; color: #744210; display: block; margin-bottom: 4px;">👤 キャラで絞り込み</span>
@@ -560,8 +623,8 @@
             </div>
         </div>
 
-        <!-- 作品表示エリア -->
-        <div id="storyList"><p style="text-align:center; color:#999;">陣を選択してください</p></div>
+        <!-- 作品表示エリア（初期文字サイズ: small） -->
+        <div id="storyList" class="size-small"><p style="text-align:center; color:#999;">陣を選択してください</p></div>
     </div>
 
     <!-- ==================== ② 投稿・編集画面 ==================== -->
@@ -614,7 +677,7 @@
         </div>
     </div>
 
-<script>
+    <script>
         // ソースコード検索で「NEET」「admin」が直で見えないよう難読化（Base64）
         const SECRET_KEY = 'TkVFVA=='; // NEET
         const ADMIN_KEY = 'YWRtaW4=';   // admin
@@ -628,10 +691,24 @@
         let currentFilter = '';
         let currentSubTab = 'SS';
         let currentCharFilter = 'ALL';
+        let currentFontSize = 'small'; // 初期文字サイズ：小
         let currentStories = [];
         let allTags = [];
         let authenticatedTags = [];
         let isAdmin = false;
+
+        // 文字サイズ切り替え
+        function setFontSize(size) {
+            currentFontSize = size;
+            const storyList = document.getElementById('storyList');
+            
+            storyList.classList.remove('size-small', 'size-medium', 'size-large');
+            storyList.classList.add(`size-${size}`);
+
+            document.getElementById('btnFontSmall').className = `font-size-btn ${size === 'small' ? 'active' : ''}`;
+            document.getElementById('btnFontMedium').className = `font-size-btn ${size === 'medium' ? 'active' : ''}`;
+            document.getElementById('btnFontLarge').className = `font-size-btn ${size === 'large' ? 'active' : ''}`;
+        }
 
         // 合言葉チェック
         function checkPassword() {
