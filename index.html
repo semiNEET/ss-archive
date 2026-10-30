@@ -446,29 +446,28 @@
             border-color: #e53e3e;
         }
 
-        /* 本文表示スタイル（文字サイズ制御対応） */
+        /* 本文表示スタイル（改行保持・文字サイズ制御対応） */
         .story-body {
             margin-top: 15px;
         }
 
-        .story-body p {
-            margin: 0 0 1em;
-            text-indent: 1em;
-            word-break: break-word;
+        .story-content {
+            white-space: pre-wrap; /* 連続改行や空白・インデントをそのまま再現 */
+            word-break: break-word; /* 長い英数字のハミ出し防止 */
         }
 
         /* 文字サイズバリエーション */
-        .size-small .story-body p {
+        .size-small .story-content {
             font-size: 13.5px;
             line-height: 1.75;
         }
 
-        .size-medium .story-body p {
+        .size-medium .story-content {
             font-size: 15px;
             line-height: 1.85;
         }
 
-        .size-large .story-body p {
+        .size-large .story-content {
             font-size: 17px;
             line-height: 1.95;
         }
@@ -523,15 +522,15 @@
                 padding: 5px 8px;
             }
 
-            .size-small .story-body p {
+            .size-small .story-content {
                 font-size: 13px;
             }
 
-            .size-medium .story-body p {
+            .size-medium .story-content {
                 font-size: 14.5px;
             }
 
-            .size-large .story-body p {
+            .size-large .story-content {
                 font-size: 16px;
             }
         }
@@ -1064,7 +1063,7 @@
             renderStoryCards();
         }
 
-        // カードの描画処理
+        // カードの描画処理（改行・空白を忠実に再現）
         function renderStoryCards() {
             const storyListDiv = document.getElementById('storyList');
             storyListDiv.innerHTML = '';
@@ -1102,12 +1101,12 @@
                     </div>
                     ${isSS ? `
                         <div class="story-body" id="body-${story.id}" style="display: none;">
-                            <p>${story.body.replace(/\n/g, '</p><p>')}</p>
+                            <div class="story-content">${story.body}</div>
                         </div>
                         <button class="toggle-body-btn" id="toggle-btn-${story.id}" onclick="toggleBody(${story.id})">📖 本文を読む</button>
                     ` : `
                         <div class="story-body">
-                            <p>${story.body.replace(/\n/g, '</p><p>')}</p>
+                            <div class="story-content">${story.body}</div>
                         </div>
                     `}
                 `;
